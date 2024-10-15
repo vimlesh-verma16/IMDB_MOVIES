@@ -5,4 +5,5 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('upload/', views.upload_csv, name='upload-csv'),
     path('movies/', views.movie_list, name='movie-list'),
+    path('clear-database/', views.clear_database, name='clear-database'),
 ]

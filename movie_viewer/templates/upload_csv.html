@@ -8,20 +8,40 @@
 {% if messages %}
 <ul class="messages">
     {% for message in messages %}
-    <li{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+    <li{% if message.tags %} class="{{ message.tags }}" {% endif %}>
+        {{ message }}
+        </li>
         {% endfor %}
 </ul>
 {% endif %}
 
-<form method="POST" enctype="multipart/form-data">
+<!-- CSV Upload Form -->
+<form method="POST" enctype="multipart/form-data" class="upload-form">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit" name="upload">Upload</button>
 
-    <!-- Button for Clearing the Database -->
-    <button type="submit" name="clear"
-        onclick="return confirm('Are you sure you want to delete all records? This action cannot be undone.')">Clear
-        Database</button>
+    <div class="form-actions">
+        <button type="submit" name="upload" class="btn btn-primary">
+            Upload CSV
+        </button>
+    </div>
+</form>
+
+<hr> <!-- Horizontal rule for visual separation -->
+
+<!-- Clear Database Section -->
+<h3>Clear Database</h3>
+<p>Click the button below to delete all movie records from the database. This action cannot be undone.</p>
+
+<form method="POST" action="{% url 'clear-database' %}" class="clear-database-form">
+    {% csrf_token %}
+
+    <div class="form-actions">
+        <button type="submit" name="clear" class="btn btn-danger"
+            onclick="return confirm('Are you sure you want to delete all records? This action cannot be undone.')">
+            Clear Database
+        </button>
+    </div>
 </form>
 
 {% endblock %}

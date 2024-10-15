@@ -10,7 +10,7 @@ class Movie(models.Model):
     language = models.CharField(max_length=50)
     runtime = models.IntegerField(null=True, blank=True)
     status = models.CharField(max_length=20)
-    budget = models.BigIntegerField(null=True, blank=True)
+    budget = models.BigIntegerField(null=False,default= -1)
     revenue = models.BigIntegerField(null=True, blank=True)
     vote_average = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True)
     vote_count = models.IntegerField(null=True, blank=True)

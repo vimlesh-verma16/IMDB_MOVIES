@@ -1,4 +1,5 @@
 import csv
+import time
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import Movie
@@ -9,20 +10,25 @@ from datetime import datetime
 def home(request):
     return render(request, 'home.html')
 
-def upload_csv(request):
-    cnt = 0
+def clear_database(request):
     if request.method == 'POST':
-        if 'upload' in request.POST: 
+        Movie.objects.all().delete()  # Clear the Movie model
+        messages.success(request, 'All movies have been deleted successfully.')
+    return redirect('upload-csv')  # Redirect to the upload page
+
+def upload_csv(request):
+    if request.method == 'POST':
             form = CSVUploadForm(request.POST, request.FILES)
             if form.is_valid():
                 csv_file = request.FILES['file']
                 if not csv_file.name.endswith('.csv'):
                     messages.error(request, "This is not a CSV file")
                     return redirect('upload-csv')
-
+                start_time = time.time()  # Start the timer
                 try:
                     decoded_file = csv_file.read().decode('utf-8').splitlines()
                     reader = csv.DictReader(decoded_file)
+                    movies = []  # List to hold Movie objects for bulk creation
                     for row in reader:
                         movie_data = {
                             "title": row['title'],
@@ -41,7 +47,8 @@ def upload_csv(request):
                             "production_company_id": row.get('production_company_id', None),
                             "genre_id": row.get('genre_id', None),
                         }
-                    
+
+                
                         # Handle budget
                         try:
                             movie_data['budget'] = int(float(movie_data['budget'])) if movie_data['budget'] else None
@@ -98,22 +105,15 @@ def upload_csv(request):
                             messages.warning(request, f"Invalid genre ID for '{row['title']}': {e}")
                             movie_data['genre_id'] = None
                         
-                        cnt+=1
-                        if cnt == 20:
-                            break
-                            print("break the loop")
-                        Movie.objects.create(**movie_data)
-
-                    messages.success(request, "CSV uploaded successfully")
-                    print("CSV uploaded successfully")
+                        movies.append(Movie(**movie_data))
+                    Movie.objects.bulk_create(movies)
+                    end_time = time.time()  # End the timer
+                    time_taken = end_time - start_time  # Calculate time taken
+                    messages.success(request, f"CSV uploaded successfully in {time_taken:.2f} seconds.")
                     return redirect('upload-csv')
                 except Exception as e:
                     messages.error(request, f"An error occurred: {str(e)}")
                     return redirect('upload-csv')
-        elif 'clear' in request.POST:  # Handle database clearing
-            Movie.objects.all().delete()  # Clear all movies from the Movie model
-            messages.success(request, 'All movies have been deleted successfully.')
-            return redirect('upload-csv')  # Redirect to the same page after deletion
     else:
         form = CSVUploadForm()
 
@@ -138,8 +138,18 @@ def movie_list(request):
 
     sort_by = request.GET.get('sort_by', 'release_date')  # Default to 'release_date'
 
-    if sort_by in ['release_date', 'ratings']:
-        movies = movies.order_by(sort_by)
+    # Check if sort_by is valid
+    if sort_by in ['release_date', 'vote_average']:  # Updated 'ratings' to 'vote_count'
+        order = request.GET.get('order', 'asc')  # Default to ascending order
+
+        # Determine the sorting order
+        if order == 'desc':
+            movies = movies.order_by(f'-{sort_by}')  # Descending order
+        else:
+            movies = movies.order_by(sort_by)  # Ascending order
+    else:
+        # Handle invalid sort_by values if necessary
+        movies = movies.order_by('release_date')  # Fallback to default sorting
 
     # Pagination
     paginator = Paginator(movies, 20)  # 10 movies per page
