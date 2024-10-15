@@ -1,0 +1,63 @@
+{% extends 'home.html' %}
+{% block content %}
+
+<form method="GET">
+
+    <label for="year_of_release">Year of Release:</label>
+    <input type="number" name="year_of_release" id="year_of_release" placeholder="e.g. 2020"
+        value="{{ request.GET.year_of_release }}">
+
+    <label for="language">Language:</label>
+    <input type="text" name="language" id="language" placeholder="e.g. English" value="{{ request.GET.language }}">
+
+    <button type="submit">Filter</button>
+
+</form>
+
+
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>
+                <a href="?sort=release_date&order={% if request.GET.order == 'asc' %}desc{% else %}asc{% endif %}">Release
+                    Date</a>
+            </th>
+            <th>
+                <a
+                    href="?sort=ratings&order={% if request.GET.order == 'asc' %}desc{% else %}asc{% endif %}">Ratings</a>
+            </th>
+            <th>Language</th>
+            <th>Overview</th>
+            <!-- Add more fields as necessary -->
+        </tr>
+    </thead>
+    <tbody>
+        {% for movie in page_obj %}
+        <tr>
+            <td>{{ movie.title }}</td>
+            <td>{{ movie.release_date }}</td>
+            <td>{{ movie.vote_average }}</td>
+            <td>{{ movie.language }}</td>
+            <td>{{ movie.overview }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div>
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    <div>
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">&laquo; Previous</a>
+        {% endif %}
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
